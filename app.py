@@ -75,18 +75,38 @@ def chatbot(user_input):
 st.markdown("""
 <style>
 
+/* FIX HEADER BENAR-BENAR STICK */
+.block-container {
+    padding-top: 0rem;
+}
+
+/* HEADER */
+.header {
+    position: sticky;
+    top: 0;
+    background: #fff0f5;
+    z-index: 1000;
+    padding: 20px;
+    border-bottom: 2px solid #ffb6c1;
+}
+
+/* biar tidak ketimpa */
+header {
+    visibility: hidden;
+}
+
 /* background */
 .main {
     background-color: #fff0f5;
 }
 
-/* container */
+/* chat container */
 .chat-container {
     max-width: 700px;
     margin: auto;
 }
 
-/* user bubble */
+/* user */
 .user-msg {
     display: flex;
     justify-content: flex-end;
@@ -100,35 +120,18 @@ st.markdown("""
     max-width: 70%;
 }
 
-/* bot bubble */
+/* bot */
 .bot-msg {
     display: flex;
     justify-content: flex-start;
 }
 .bot-bubble {
     background-color: white;
-    color: black;
     padding: 10px 15px;
     border-radius: 18px;
     margin: 5px 0;
     max-width: 70%;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-/* header */
-.header {
-    text-align: center;
-    padding: 20px;
-}
-
-/* input */
-.stChatInput {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: 700px;
-    width: 100%;
 }
 
 </style>
@@ -145,16 +148,6 @@ st.markdown("""
 # ================= SESSION =================
 if "history" not in st.session_state:
     st.session_state.history = []
-
-# ================= INPUT =================
-user_input = st.chat_input("Tanyakan sesuatu...")
-
-if user_input:
-    with st.spinner("🤖 Sedang berpikir..."):
-        response = chatbot(user_input)
-
-    st.session_state.history.append(("user", user_input))
-    st.session_state.history.append(("bot", response))
 
 # ================= CHAT =================
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
@@ -175,11 +168,22 @@ for role, msg in st.session_state.history:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# ================= INPUT (IKUT SCROLL) =================
+user_input = st.chat_input("Tanyakan sesuatu...")
+
+if user_input:
+    with st.spinner("🤖 Sedang berpikir..."):
+        response = chatbot(user_input)
+
+    st.session_state.history.append(("user", user_input))
+    st.session_state.history.append(("bot", response))
+
+    st.rerun()
+
 # ================= SIDEBAR =================
 st.sidebar.markdown("## 📚 Sumber Data")
 st.sidebar.write(f"Jumlah data: {len(df)}")
 
-# 🔥 COLLAPSIBLE
 with st.sidebar.expander("💡 Cara Kerja"):
     st.write("""
     - Pertanyaan diubah jadi embedding  
