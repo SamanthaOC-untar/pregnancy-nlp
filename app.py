@@ -1,12 +1,10 @@
-import gradio as gr
+import streamlit as st
 import json
 import pandas as pd
 import re
-import random
-from sentence_transformers import SentenceTransformer
-from sentence_transformers.util import cos_sim
+from sentence_transformers import SentenceTransformer, util
 
-# ================= LOAD DATA =================
+# LOAD DATA
 with open("chatbot-ibu-hamil.json") as f:
     data = json.load(f)
 
@@ -15,16 +13,11 @@ for intent in data['intents']:
     for pattern in intent['patterns']:
         rows.append({
             "question": pattern,
-            "answer": intent.get('answer', {}).get('text', intent.get('responses', [""])[0]),
-            "category": intent.get('category', {}).get('primary', intent.get('tag', 'unknown')),
-            "intent": intent.get('intent', 'general'),
-            "risk_level": intent.get('risk_level', 'unknown'),
-            "source": intent.get('source', '-')
+            "answer": intent.get('responses', [""])[0],
         })
 
 df = pd.DataFrame(rows)
 
-# ================= PREPROCESS =================
 def preprocess(text):
     text = text.lower()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
@@ -33,155 +26,55 @@ def preprocess(text):
 
 df['processed_question'] = df['question'].apply(preprocess)
 
-# ================= MODEL =================
-model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+@st.cache_resource
+def load_model():
+    return SentenceTransformer('all-MiniLM-L6-v2')
 
-embeddings = model.encode(
-    df['processed_question'].tolist(),
-    convert_to_tensor=True
-)
+model = load_model()
 
-# ================= RULE-BASED =================
-rules = {
-    "emergency": {
-        "patterns": [r'(sesak.*berat|nyeri dada.*berat|pingsan)'],
-        "responses": ["🚨 DARURAT! Segera ke IGD!"]
-    },
-    "greeting": {
-        "patterns": [r'\b(halo|hai|hi|hello)\b'],
-        "responses": ["👋 Halo! Ada yang bisa saya bantu?"]
-    }
-}
+@st.cache_data
+def get_embeddings():
+    return model.encode(df['processed_question'].tolist(), convert_to_tensor=False)
 
-def check_rules(text):
-    for intent, data_rule in rules.items():
-        for pattern in data_rule['patterns']:
-            if re.search(pattern, text.lower()):
-                return random.choice(data_rule['responses'])
-    return None
-
-# ================= CHATBOT =================
-THRESHOLD = 0.4
+embeddings = get_embeddings()
 
 def chatbot(user_input):
-
-    rule = check_rules(user_input)
-    if rule:
-        return {"answer": rule}
-
     user_input_clean = preprocess(user_input)
-    user_emb = model.encode(user_input_clean, convert_to_tensor=True)
+    user_emb = model.encode(user_input_clean, convert_to_tensor=False)
 
-    similarity = cos_sim(user_emb, embeddings)
+    similarity = util.cos_sim(user_emb, embeddings)
 
     index = similarity.argmax().item()
     score = similarity.max().item()
 
-    if score < THRESHOLD:
-        return {"answer": "Tidak ditemukan jawaban"}
+    if score < 0.4:
+        return "😅 Maaf, aku belum menemukan jawaban"
 
-    row = df.iloc[index]
+    return df.iloc[index]['answer']
 
-    return {
-        "answer": row['answer'],
-        "question": row['question'],   
-        "category": row.get('category', '-'),
-        "confidence": score
-    }
+# UI
+st.set_page_config(page_title="Pregnancy Chatbot", page_icon="🤰")
 
-# ================= RESPONSE (FIX GRADIO) =================
-def respond(message, history):
-    result = chatbot(message)
+st.title("🤰 Pregnancy Chatbot")
+st.write("Chatbot untuk membantu pertanyaan kehamilan 💖")
 
-    answer = result["answer"]
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-    if answer == "Tidak ditemukan jawaban":
-        reply = "😅 Maaf, aku belum menemukan jawaban yang sesuai"
+user_input = st.chat_input("Tanya sesuatu...")
+
+if user_input:
+    response = chatbot(user_input)
+    st.session_state.history.append(("user", user_input))
+    st.session_state.history.append(("bot", response))
+
+for role, msg in st.session_state.history:
+    if role == "user":
+        st.chat_message("user").write(msg)
     else:
-        reply = f"💖 {answer}"
+        st.chat_message("assistant").write(msg)
 
-    # 🔥 FORMAT BARU (WAJIB)
-    history.append({"role": "user", "content": message})
-    history.append({"role": "assistant", "content": reply})
-
-    return history, ""
-
-# ================= THEME =================
-theme = gr.themes.Soft(
-    primary_hue="pink",
-    secondary_hue="rose",
-    neutral_hue="gray"
-)
-
-# ================= UI =================
-with gr.Blocks(theme=theme, css = """
-body {
-    background-color: #fff0f5;
-    color: #000000 !important;
-}
-
-.gradio-container {
-    max-width: 1000px !important;
-    margin: auto;
-}
-
-/* 🔥 FIX TEXT BIAR KELIHATAN */
-h1, h2, h3, p, label {
-    color: #000000 !important;
-}
-
-/* 🔥 CHAT AREA */
-.gr-chatbot {
-    background-color: #0b1220 !important;
-    color: white !important;
-}
-
-/* 🔥 DATAFRAME */
-table {
-    color: black !important;
-}
-
-/* 🔥 PANEL KANAN */
-.gr-markdown {
-    color: black !important;
-}
-
-footer {display:none}
-""") as demo:
-
-    gr.Markdown("# 🤰 535240102 Pregnancy Chatbot")
-    gr.Markdown("Chatbot berbasis data kehamilan untuk membantu menjawab pertanyaan ibu hamil 💖")
-
-    with gr.Row():
-
-        # CHAT
-        with gr.Column(scale=3):
-            chatbot_ui = gr.Chatbot(height=500, type="messages")  # 🔥 FIX
-            msg = gr.Textbox(placeholder="Tanyakan seputar kehamilan...", label="")
-
-        # SUMBER DATA
-        with gr.Column(scale=2):
-
-            gr.Markdown("## 📚 Sumber Data")
-
-            gr.Markdown(f"""
-Dataset yang digunakan:
-- Pregnancy FAQ Dataset (Kaggle)
-
-📊 Jumlah data: **{len(df)}**
-📂 Kolom: **{', '.join(df.columns)}**
-
-💡 Cara kerja:
-- Pertanyaan diubah jadi embedding
-- Dicari yang paling mirip di dataset
-- Jawaban diambil dari FAQ terdekat
-""")
-
-            gr.Markdown("### 🔍 Contoh Data")
-            gr.Dataframe(df.head(5))
-
-    msg.submit(respond, [msg, chatbot_ui], [chatbot_ui, msg])
-
-# ================= RUN =================
-if __name__ == "__main__":
-    demo.launch()
+# sidebar
+st.sidebar.title("📚 Sumber Data")
+st.sidebar.write(f"Jumlah data: {len(df)}")
+st.sidebar.dataframe(df.head())
