@@ -4,6 +4,9 @@ import pandas as pd
 import re
 from sentence_transformers import SentenceTransformer, util
 
+# ================= CONFIG =================
+st.set_page_config(page_title="Pregnancy Chatbot", page_icon="🤰", layout="wide")
+
 # ================= LOAD DATA =================
 with open("chatbot-ibu-hamil.json") as f:
     data = json.load(f)
@@ -68,50 +71,64 @@ def chatbot(user_input):
 
     return df.iloc[index]['answer']
 
-# ================= UI CONFIG =================
-st.set_page_config(page_title="Pregnancy Chatbot", page_icon="🤰", layout="wide")
-
-# ================= CSS =================
+# ================= STYLE =================
 st.markdown("""
 <style>
 
-/* BACKGROUND */
+/* background */
 .main {
     background-color: #fff0f5;
 }
 
-/* HEADER STICKY */
-.header {
-    position: sticky;
-    top: 0;
-    background-color: #fff0f5;
-    padding: 15px;
-    z-index: 999;
-    border-bottom: 2px solid #ffb6c1;
+/* container */
+.chat-container {
+    max-width: 700px;
+    margin: auto;
 }
 
-/* USER CHAT */
-.chat-bubble-user {
+/* user bubble */
+.user-msg {
+    display: flex;
+    justify-content: flex-end;
+}
+.user-bubble {
     background-color: #ff4d88;
     color: white;
     padding: 10px 15px;
-    border-radius: 15px;
+    border-radius: 18px;
     margin: 5px 0;
-    text-align: right;
+    max-width: 70%;
 }
 
-/* BOT CHAT */
-.chat-bubble-bot {
-    background-color: #ffffff;
+/* bot bubble */
+.bot-msg {
+    display: flex;
+    justify-content: flex-start;
+}
+.bot-bubble {
+    background-color: white;
     color: black;
     padding: 10px 15px;
-    border-radius: 15px;
+    border-radius: 18px;
     margin: 5px 0;
+    max-width: 70%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-/* SCROLL AREA */
-.chat-container {
-    margin-top: 10px;
+/* header */
+.header {
+    text-align: center;
+    padding: 20px;
+}
+
+/* input fix */
+.stChatInput {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 700px;
+    width: 100%;
 }
 
 </style>
@@ -120,7 +137,7 @@ st.markdown("""
 # ================= HEADER =================
 st.markdown("""
 <div class="header">
-    <h2 style="color:#ff4d88;">🤰 Pregnancy Chatbot</h2>
+    <h1 style="color:#ff4d88;">🤰 Pregnancy Chatbot</h1>
     <p>Asisten untuk membantu pertanyaan seputar kehamilan 💖</p>
 </div>
 """, unsafe_allow_html=True)
@@ -135,6 +152,7 @@ user_input = st.chat_input("Tanyakan sesuatu...")
 if user_input:
     with st.spinner("🤖 Sedang berpikir..."):
         response = chatbot(user_input)
+
     st.session_state.history.append(("user", user_input))
     st.session_state.history.append(("bot", response))
 
@@ -143,9 +161,17 @@ st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 for role, msg in st.session_state.history:
     if role == "user":
-        st.markdown(f"<div class='chat-bubble-user'>{msg}</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="user-msg">
+            <div class="user-bubble">{msg}</div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.markdown(f"<div class='chat-bubble-bot'>{msg}</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="bot-msg">
+            <div class="bot-bubble">{msg}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -155,9 +181,9 @@ st.sidebar.write(f"Jumlah data: {len(df)}")
 
 st.sidebar.markdown("### 💡 Cara Kerja")
 st.sidebar.write("""
-- Pertanyaan diubah jadi embedding
-- Dicari yang paling mirip
-- Jawaban diambil dari dataset
+- Pertanyaan diubah jadi embedding  
+- Dicari yang paling mirip  
+- Jawaban diambil dari dataset  
 """)
 
 st.sidebar.markdown("### 🔍 Contoh Data")
