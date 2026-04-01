@@ -5,8 +5,12 @@ import re
 from sentence_transformers import SentenceTransformer, util
 
 # ================= CONFIG =================
-st.set_page_config(page_title="Pregnancy Chatbot", page_icon="🤰", layout="wide")
-
+st.set_page_config(
+    page_title="Pregnancy Chatbot",
+    page_icon="🤰",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 # ================= LOAD DATA =================
 with open("chatbot-ibu-hamil.json") as f:
     data = json.load(f)
