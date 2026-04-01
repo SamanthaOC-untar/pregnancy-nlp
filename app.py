@@ -89,7 +89,7 @@ def chatbot(user_input):
         "confidence": score
     }
 
-# ================= UI RESPONSE =================
+# ================= RESPONSE (FIX GRADIO) =================
 def respond(message, history):
     result = chatbot(message)
 
@@ -100,7 +100,10 @@ def respond(message, history):
     else:
         reply = f"💖 {answer}"
 
-    history.append((message, reply))
+    # 🔥 FORMAT BARU (WAJIB)
+    history.append({"role": "user", "content": message})
+    history.append({"role": "assistant", "content": reply})
+
     return history, ""
 
 # ================= THEME =================
@@ -122,14 +125,14 @@ body {
 footer {display:none}
 """) as demo:
 
-    gr.Markdown("# 🤰 Pregnancy Chatbot")
+    gr.Markdown("# 🤰 535240102 Pregnancy Chatbot")
     gr.Markdown("Chatbot berbasis data kehamilan untuk membantu menjawab pertanyaan ibu hamil 💖")
 
     with gr.Row():
 
         # CHAT
         with gr.Column(scale=3):
-            chatbot_ui = gr.Chatbot(height=500)
+            chatbot_ui = gr.Chatbot(height=500, type="messages")  # 🔥 FIX
             msg = gr.Textbox(placeholder="Tanyakan seputar kehamilan...", label="")
 
         # SUMBER DATA
