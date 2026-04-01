@@ -4,13 +4,14 @@ import pandas as pd
 import re
 from sentence_transformers import SentenceTransformer, util
 
-# ================= CONFIG =================
+# ================= CONFIG (WAJIB PALING ATAS) =================
 st.set_page_config(
     page_title="Pregnancy Chatbot",
     page_icon="🤰",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded"  # 🔥 ini bikin sidebar muncul lagi
 )
+
 # ================= LOAD DATA =================
 with open("chatbot-ibu-hamil.json") as f:
     data = json.load(f)
@@ -79,37 +80,12 @@ def chatbot(user_input):
 st.markdown("""
 <style>
 
-/* FIX HEADER BENAR-BENAR STICK */
-.block-container {
-    padding-top: 0rem;
-}
-
-/* HEADER */
-.header {
-    position: sticky;
-    top: 0;
-    background: #fff0f5;
-    z-index: 1000;
-    padding: 20px;
-    border-bottom: 2px solid #ffb6c1;
-}
-
-/* paksa tombol sidebar muncul */
-button[kind="header"] {
-    display: block !important;
-}
-
-/* biar tidak ketimpa */
-header {
-    visibility: hidden;
-}
-
 /* background */
 .main {
     background-color: #fff0f5;
 }
 
-/* chat container */
+/* container */
 .chat-container {
     max-width: 700px;
     margin: auto;
@@ -141,6 +117,12 @@ header {
     margin: 5px 0;
     max-width: 70%;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* header */
+.header {
+    text-align: center;
+    padding: 20px;
 }
 
 </style>
@@ -177,7 +159,7 @@ for role, msg in st.session_state.history:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ================= INPUT (IKUT SCROLL) =================
+# ================= INPUT =================
 user_input = st.chat_input("Tanyakan sesuatu...")
 
 if user_input:
@@ -193,7 +175,7 @@ if user_input:
 st.sidebar.markdown("## 📚 Sumber Data")
 st.sidebar.write(f"Jumlah data: {len(df)}")
 
-with st.sidebar.expander("💡 Cara Kerja"):
+with st.sidebar.expander("💡 Cara Kerja", expanded=True):
     st.write("""
     - Pertanyaan diubah jadi embedding  
     - Dicari yang paling mirip  
