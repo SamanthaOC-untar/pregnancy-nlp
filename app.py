@@ -94,6 +94,11 @@ st.markdown("""
     border-bottom: 2px solid #ffb6c1;
 }
 
+/* paksa tombol sidebar muncul */
+button[kind="header"] {
+    display: block !important;
+}
+
 /* biar tidak ketimpa */
 header {
     visibility: hidden;
