@@ -121,7 +121,7 @@ st.markdown("""
     padding: 20px;
 }
 
-/* input fix */
+/* input */
 .stChatInput {
     position: fixed;
     bottom: 20px;
@@ -179,12 +179,13 @@ st.markdown('</div>', unsafe_allow_html=True)
 st.sidebar.markdown("## 📚 Sumber Data")
 st.sidebar.write(f"Jumlah data: {len(df)}")
 
-st.sidebar.markdown("### 💡 Cara Kerja")
-st.sidebar.write("""
-- Pertanyaan diubah jadi embedding  
-- Dicari yang paling mirip  
-- Jawaban diambil dari dataset  
-""")
+# 🔥 COLLAPSIBLE
+with st.sidebar.expander("💡 Cara Kerja"):
+    st.write("""
+    - Pertanyaan diubah jadi embedding  
+    - Dicari yang paling mirip  
+    - Jawaban diambil dari dataset  
+    """)
 
-st.sidebar.markdown("### 🔍 Contoh Data")
-st.sidebar.dataframe(df.head())
+with st.sidebar.expander("🔍 Contoh Data"):
+    st.dataframe(df.head())
