@@ -114,14 +114,38 @@ theme = gr.themes.Soft(
 )
 
 # ================= UI =================
-with gr.Blocks(theme=theme, css="""
+with gr.Blocks(theme=theme, css = """
 body {
     background-color: #fff0f5;
+    color: #000000 !important;
 }
+
 .gradio-container {
     max-width: 1000px !important;
     margin: auto;
 }
+
+/* 🔥 FIX TEXT BIAR KELIHATAN */
+h1, h2, h3, p, label {
+    color: #000000 !important;
+}
+
+/* 🔥 CHAT AREA */
+.gr-chatbot {
+    background-color: #0b1220 !important;
+    color: white !important;
+}
+
+/* 🔥 DATAFRAME */
+table {
+    color: black !important;
+}
+
+/* 🔥 PANEL KANAN */
+.gr-markdown {
+    color: black !important;
+}
+
 footer {display:none}
 """) as demo:
 
